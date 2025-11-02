@@ -5,6 +5,14 @@ export default defineConfig({
   title: '@adi-family/http',
   description: 'Framework-agnostic, type-safe HTTP interface system',
 
+  // GitHub Pages deployment
+  base: '/http/',
+
+  // Enable sitemap
+  sitemap: {
+    hostname: 'https://adi-family.github.io/http/'
+  },
+
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     logo: '/logo.svg',
