@@ -4,6 +4,96 @@ framework-agnostic, type-safe, validation, contracts, DRY
 
 A framework-agnostic, type-safe HTTP interface system that separates API contracts from implementation, enabling end-to-end type safety between client and server.
 
+## ⚡ Quick Start
+
+```typescript
+// 1️⃣ Define contract (shared between client & server)
+import { route } from '@adi-family/http'
+import { z } from 'zod'
+import type { HandlerConfig } from '@adi-family/http'
+
+export const createUserConfig = {
+  method: 'POST',
+  route: route.static('/api/users'),
+  body: {
+    schema: z.object({
+      name: z.string().min(1).max(100),
+      email: z.string().email(),
+      age: z.number().min(18).optional()
+    })
+  },
+  response: {
+    schema: z.object({
+      id: z.string().uuid(),
+      name: z.string(),
+      email: z.string(),
+      createdAt: z.string().datetime()
+    })
+  }
+} as const satisfies HandlerConfig
+// ✓ Type inference: TypeScript knows exact request/response shapes
+
+// 2️⃣ Implement server handler
+import { handler } from '@adi-family/http'
+
+export const createUserHandler = handler(createUserConfig, async (ctx) => {
+  // ctx.body is typed as: { name: string, email: string, age?: number }
+  const user = await db.users.create({
+    id: crypto.randomUUID(),
+    name: ctx.body.name,
+    email: ctx.body.email,
+    age: ctx.body.age,
+    createdAt: new Date().toISOString()
+  })
+
+  // Return type must match response schema or TypeScript errors
+  return user
+})
+
+// 3️⃣ Serve with Express (or Native HTTP)
+import express from 'express'
+import { serveExpress } from '@adi-family/http-express'
+
+const app = express()
+app.use(express.json())
+serveExpress(app, [createUserHandler])
+app.listen(3000)
+
+// 4️⃣ Use from client with full type safety
+import { BaseClient } from '@adi-family/http'
+
+const client = new BaseClient({ baseUrl: 'http://localhost:3000' })
+
+const newUser = await client.run(createUserConfig, {
+  body: {
+    name: 'Alice',
+    email: 'alice@example.com',
+    age: 25
+  }
+})
+
+// ✓ newUser is typed as: { id: string, name: string, email: string, createdAt: string }
+console.log(newUser.id)        // ✓ TypeScript knows this exists
+console.log(newUser.name)      // ✓ TypeScript knows this exists
+console.log(newUser.unknown)   // ✗ TypeScript error: Property doesn't exist
+
+// ✓ Compile-time errors for invalid data
+await client.run(createUserConfig, {
+  body: {
+    name: 'Bob',
+    email: 'invalid-email',  // ✗ TypeScript error: Invalid email format
+    age: 15                   // ✗ Runtime validation error: Age must be >= 18
+  }
+})
+```
+
+**What you get:**
+- ✅ **End-to-end type safety** - TypeScript infers all types from config
+- ✅ **Single source of truth** - One config shared everywhere
+- ✅ **Automatic validation** - Zod validates body/query on client & server
+- ✅ **Zero boilerplate** - No manual type definitions or validators
+- ✅ **Framework agnostic** - Works with Express, Native HTTP, or any framework
+
 ## Key Principles
 
 - **Config-based contracts** - API definitions are pure configuration objects
