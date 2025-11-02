@@ -33,8 +33,6 @@ docs/
 
 Documentation is automatically deployed to GitHub Pages on push to main.
 
-See [DEPLOYMENT.md](../DEPLOYMENT.md) for details.
-
 ## Contributing
 
 To add or update documentation:
