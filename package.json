@@ -1,0 +1,42 @@
+{
+  "name": "@adi-family/http-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Framework-agnostic, type-safe HTTP interface system",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "bun run build:http && bun run build:http-express",
+    "build:http": "cd packages/http && bun run build",
+    "build:http-express": "cd packages/http-express && bun run build",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf packages/*/dist",
+    "dev:example": "bun run examples/server/app.ts"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adi-family/http.git"
+  },
+  "keywords": [
+    "http",
+    "framework-agnostic",
+    "type-safe",
+    "validation",
+    "contracts",
+    "zod",
+    "express",
+    "typescript"
+  ],
+  "author": "ADI Family",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/adi-family/http/issues"
+  },
+  "homepage": "https://github.com/adi-family/http#readme"
+}
