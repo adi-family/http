@@ -43,11 +43,12 @@ app.listen(3000, () => {
 
 ```typescript
 import { z } from 'zod'
+import { route } from '@adi-family/http'
 import type { HandlerConfig } from '@adi-family/http'
 
 export const createUserConfig = {
   method: 'POST',
-  url: '/api/users',
+  route: route.static('/api/users'),
   body: {
     schema: z.object({
       name: z.string(),

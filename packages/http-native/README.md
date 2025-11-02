@@ -43,17 +43,13 @@ const server = serveNative(
 
 ```typescript
 import { serveNative } from '@adi-family/http-native'
-import { handler } from '@adi-family/http'
+import { handler, route } from '@adi-family/http'
 import { z } from 'zod'
 
 const getUserHandler = handler(
   {
     method: 'GET',
-    params: {
-      schema: z.object({ id: z.string() }),
-      pattern: '/api/users/:id',
-      build: (params) => `/api/users/${params.id}`
-    },
+    route: route.pattern('/api/users/:id', z.object({ id: z.string() })),
     response: {
       schema: z.object({
         id: z.string(),
@@ -120,13 +116,13 @@ server.listen(3000, '0.0.0.0', () => {
 ### With Query Parameters
 
 ```typescript
-import { handler } from '@adi-family/http'
+import { handler, route } from '@adi-family/http'
 import { z } from 'zod'
 
 const listUsersHandler = handler(
   {
     method: 'GET',
-    url: '/api/users',
+    route: route.static('/api/users'),
     query: {
       schema: z.object({
         page: z.number().optional(),
@@ -155,7 +151,7 @@ const listUsersHandler = handler(
 const createUserHandler = handler(
   {
     method: 'POST',
-    url: '/api/users',
+    route: route.static('/api/users'),
     body: {
       schema: z.object({
         name: z.string().min(1),

@@ -16,15 +16,12 @@ bun add @adi-family/http zod
 
 ```typescript
 import { z } from 'zod'
+import { route } from '@adi-family/http'
 import type { HandlerConfig } from '@adi-family/http'
 
 export const getUserConfig = {
   method: 'GET',
-  params: {
-    schema: z.object({ id: z.string() }),
-    pattern: '/api/users/:id',
-    build: (params) => `/api/users/${params.id}`
-  },
+  route: route.pattern('/api/users/:id', z.object({ id: z.string() })),
   response: {
     schema: z.object({
       id: z.string(),

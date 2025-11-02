@@ -51,39 +51,57 @@ mkdir -p packages/api-contracts
 ### 1. Handler Config Structure
 
 ```typescript
-interface HandlerConfig {
+interface HandlerConfig<TParams, TQuery, TBody, TResponse> {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+  route: RouteConfig<TParams>  // Required - defines the endpoint
+  query?: QueryConfig<TQuery>
+  body?: BodyConfig<TBody>
+  response?: ResponseConfig<TResponse>
+}
 
-  // Option 1: Static URL (no params)
-  url?: string
+// Route configuration - discriminated union
+type RouteConfig<TParams> =
+  | {
+      type: 'static'
+      path: string  // e.g., '/api/users'
+    }
+  | {
+      type: 'pattern'
+      pattern: string  // e.g., '/api/users/:id'
+      params: ZodSchema<TParams>
+      build?: (params: TParams) => string  // Optional URL builder
+    }
+  | {
+      type: 'custom'
+      params: ZodSchema<TParams>
+      build: (params: TParams) => string  // Build URL from params
+      parse: (url: URL) => TParams  // Extract params from URL
+      is: (url: URL) => boolean  // Check if URL matches this route
+    }
 
-  // Option 2: Dynamic URL with params
-  params?: {
-    schema: ZodSchema        // For type inference only
-    build: (params) => string // URL builder function
-    pattern: string          // Express route pattern
-  }
+// Supporting types
+interface QueryConfig<TQuery> {
+  schema: ZodSchema<TQuery>  // Validated on client & server
+}
 
-  // Optional query parameters
-  query?: {
-    schema: ZodSchema        // Validated on client & server
-  }
+interface BodyConfig<TBody> {
+  schema: ZodSchema<TBody>  // Validated on client & server
+}
 
-  // Optional request body
-  body?: {
-    schema: ZodSchema        // Validated on client & server
-  }
-
-  // Optional response validation
-  response?: {
-    schema: ZodSchema        // Validates response data
-  }
+interface ResponseConfig<TResponse> {
+  schema: ZodSchema<TResponse>  // Validates response data
 }
 ```
 
-### 2. Validation Rules
+### 2. Route Types
 
-- **Params**: NOT validated (only used for URL building)
+- **Static routes**: Fixed paths with no parameters (e.g., `/api/users`)
+- **Pattern routes**: Express-style patterns with path parameters (e.g., `/api/users/:id`)
+- **Custom routes**: Full control over URL building, parsing, and matching
+
+### 3. Validation Rules
+
+- **Route params**: Validated with Zod schema (pattern and custom routes)
 - **Query**: Validated with Zod on both client and server
 - **Body**: Validated with Zod on both client and server
 - **Response**: Validated with Zod (optional)
@@ -122,12 +140,13 @@ packages/
 ```typescript
 // packages/api-contracts/projects.ts
 import { z } from 'zod'
-import type { HandlerConfig } from '@adi-utils/http'
+import { route } from '@adi-family/http'
+import type { HandlerConfig } from '@adi-family/http'
 
 // Simple GET request (no params)
 export const listProjectsConfig = {
   method: 'GET',
-  url: '/api/projects',
+  route: route.static('/api/projects'),
   query: {
     schema: z.object({
       page: z.number().optional(),
@@ -142,14 +161,10 @@ export const listProjectsConfig = {
   }
 } as const satisfies HandlerConfig
 
-// GET with URL params
+// GET with URL params (pattern route)
 export const getProjectConfig = {
   method: 'GET',
-  params: {
-    schema: z.object({ id: z.string() }),
-    pattern: '/api/projects/:id',  // For Express routing
-    build: (params) => `/api/projects/${params.id}`
-  },
+  route: route.pattern('/api/projects/:id', z.object({ id: z.string() })),
   response: {
     schema: z.object({
       id: z.string(),
@@ -162,7 +177,7 @@ export const getProjectConfig = {
 // POST with body
 export const createProjectConfig = {
   method: 'POST',
-  url: '/api/projects',
+  route: route.static('/api/projects'),
   body: {
     schema: z.object({
       name: z.string().min(1),
@@ -180,14 +195,13 @@ export const createProjectConfig = {
 // Complex nested route with params and query
 export const getProjectTaskConfig = {
   method: 'GET',
-  params: {
-    schema: z.object({
+  route: route.pattern(
+    '/api/projects/:projectId/tasks/:taskId',
+    z.object({
       projectId: z.string(),
       taskId: z.string()
-    }),
-    pattern: '/api/projects/:projectId/tasks/:taskId',
-    build: (params) => `/api/projects/${params.projectId}/tasks/${params.taskId}`
-  },
+    })
+  ),
   query: {
     schema: z.object({
       include: z.enum(['comments', 'assignees']).optional()
@@ -500,11 +514,7 @@ const project = await client.projects[':id'].$get({ param: { id: '123' } })
 // 1. Define config (contracts)
 export const getProjectConfig = {
   method: 'GET',
-  params: {
-    schema: z.object({ id: z.string() }),
-    pattern: '/api/projects/:id',
-    build: (params) => `/api/projects/${params.id}`
-  },
+  route: route.pattern('/api/projects/:id', z.object({ id: z.string() })),
   response: {
     schema: z.object({ id: z.string(), name: z.string() })
   }

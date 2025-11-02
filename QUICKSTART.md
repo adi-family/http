@@ -25,15 +25,12 @@ mkdir -p packages/{api-contracts,backend/handlers,client/api}
 ```typescript
 // packages/api-contracts/users.ts
 import { z } from 'zod'
+import { route } from '@adi-utils/http'
 import type { HandlerConfig } from '@adi-utils/http'
 
 export const getUserConfig = {
   method: 'GET',
-  params: {
-    schema: z.object({ id: z.string() }),
-    pattern: '/api/users/:id',
-    build: (params) => `/api/users/${params.id}`
-  },
+  route: route.pattern('/api/users/:id', z.object({ id: z.string() })),
   response: {
     schema: z.object({
       id: z.string(),
@@ -113,7 +110,7 @@ console.log(user.name) // TypeScript knows this exists!
 ```typescript
 export const createUserConfig = {
   method: 'POST',
-  url: '/api/users',
+  route: route.static('/api/users'),
   body: {
     schema: z.object({
       name: z.string(),
@@ -131,7 +128,7 @@ export const createUserConfig = {
 ```typescript
 export const listUsersConfig = {
   method: 'GET',
-  url: '/api/users',
+  route: route.static('/api/users'),
   query: {
     schema: z.object({
       page: z.number().optional(),
@@ -149,14 +146,13 @@ export const listUsersConfig = {
 ```typescript
 export const getUserPostConfig = {
   method: 'GET',
-  params: {
-    schema: z.object({
+  route: route.pattern(
+    '/api/users/:userId/posts/:postId',
+    z.object({
       userId: z.string(),
       postId: z.string()
-    }),
-    pattern: '/api/users/:userId/posts/:postId',
-    build: (params) => `/api/users/${params.userId}/posts/${params.postId}`
-  },
+    })
+  ),
   response: {
     schema: z.object({ id: z.string(), title: z.string() })
   }
@@ -167,6 +163,7 @@ export const getUserPostConfig = {
 
 1. **Always use `as const satisfies HandlerConfig`** for proper type inference
 2. **Export configs from `@api-contracts`** for sharing between client/server
-3. **Don't validate params** - they're only for URL building
-4. **Validate body and query** - use Zod schemas for safety
-5. **Keep configs simple** - no complex logic in configs
+3. **Use `route.static()` for fixed paths** - no parameters needed
+4. **Use `route.pattern()` for dynamic routes** - Express-style patterns with Zod validation
+5. **Validate body and query** - use Zod schemas for safety
+6. **Keep configs simple** - no complex logic in configs
