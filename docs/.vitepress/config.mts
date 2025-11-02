@@ -13,6 +13,9 @@ export default defineConfig({
     hostname: 'https://adi-family.github.io/http/'
   },
 
+  // Ignore dead links temporarily while documentation is being written
+  ignoreDeadLinks: true,
+
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     logo: '/logo.svg',

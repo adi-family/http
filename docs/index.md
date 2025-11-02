@@ -7,7 +7,7 @@ hero:
   tagline: Type-safe, config-based API contracts for client and server
   image:
     src: /logo.svg
-    alt: @adi-family/http
+    alt: "@adi-family/http"
   actions:
     - theme: brand
       text: Get Started
