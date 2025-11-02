@@ -13,7 +13,7 @@ export default defineConfig({
     hostname: 'https://adi-family.github.io/http/'
   },
 
-  // Ignore dead links temporarily while documentation is being written
+  // Ignore dead links for pages still under development
   ignoreDeadLinks: true,
 
   themeConfig: {
