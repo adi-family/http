@@ -19,7 +19,6 @@ export default defineConfig({
 
     nav: [
       { text: 'Guide', link: '/guide/getting-started' },
-      { text: 'API Reference', link: '/api/core' },
       { text: 'Examples', link: '/examples/basic' },
       {
         text: 'v1.0.0',
@@ -64,24 +63,6 @@ export default defineConfig({
             { text: 'Middleware', link: '/guide/middleware' },
             { text: 'Error Handling', link: '/guide/error-handling' },
             { text: 'Testing', link: '/guide/testing' }
-          ]
-        }
-      ],
-      '/api/': [
-        {
-          text: 'API Reference',
-          items: [
-            { text: 'Core (@adi-family/http)', link: '/api/core' },
-            { text: 'Express Adapter', link: '/api/express' },
-            { text: 'Native Adapter', link: '/api/native' }
-          ]
-        },
-        {
-          text: 'Types',
-          items: [
-            { text: 'RouteConfig', link: '/api/types/route-config' },
-            { text: 'HandlerConfig', link: '/api/types/handler-config' },
-            { text: 'Type Helpers', link: '/api/types/helpers' }
           ]
         }
       ],

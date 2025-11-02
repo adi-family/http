@@ -15,9 +15,6 @@ hero:
     - theme: alt
       text: View on GitHub
       link: https://github.com/adi-family/http
-    - theme: alt
-      text: API Reference
-      link: /api/core
 
 features:
   - icon: 🎯
@@ -194,9 +191,9 @@ pnpm add @adi-family/http-native   # For Native Node.js
     <p>Explore practical examples and patterns</p>
   </a>
 
-  <a href="/api/core" class="vp-link-grid-item">
-    <h3>📖 API Reference</h3>
-    <p>Complete API documentation</p>
+  <a href="/guide/llm" class="vp-link-grid-item">
+    <h3>🤖 LLM Reference</h3>
+    <p>Quick reference guide for AI assistants</p>
   </a>
 </div>
 
