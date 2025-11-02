@@ -7,6 +7,7 @@
 
 import type { Express, Request, Response, NextFunction } from 'express'
 import type { Handler } from '@adi-family/http'
+import { getServerPattern } from '@adi-family/http'
 
 /**
  * Serve handlers with Express
@@ -40,21 +41,32 @@ export function serveExpress(
     const { config, fn } = handler
     const method = (config.method?.toLowerCase() || 'get') as 'get' | 'post' | 'put' | 'patch' | 'delete'
 
-    // Determine Express route
-    let expressRoute: string
-    if (config.url) {
-      expressRoute = config.url
-    } else if (config.params) {
-      expressRoute = config.params.pattern
-    } else {
-      throw new Error('No route found in handler config')
+    // Get Express route pattern from route config
+    const expressRoute = getServerPattern(config.route)
+
+    if (expressRoute === null) {
+      // Custom routes without a pattern - use catch-all
+      // Will need manual matching with route.is()
+      console.warn('Custom routes (route.full()) are not yet fully supported in Express adapter')
+      return
     }
 
     // Register route
     app[method](expressRoute, async (req: Request, res: Response, next: NextFunction) => {
       try {
-        // Extract params (no validation!)
-        const params = req.params || {}
+        // Parse params from URL using route config
+        let params: any = {}
+        if (config.route.type !== 'static') {
+          // For pattern and custom routes, extract params
+          if (config.route.type === 'pattern') {
+            // Express already parsed params for us
+            params = req.params || {}
+          } else if (config.route.type === 'custom') {
+            // Use custom parse function
+            const url = new URL(req.url, `http://${req.headers.host}`)
+            params = config.route.parse(url)
+          }
+        }
 
         // Validate and extract query
         let query = req.query

@@ -9,7 +9,7 @@
 
 // Export all types
 export type {
-  ParamsConfig,
+  RouteConfig,
   BodyConfig,
   QueryConfig,
   ResponseConfig,
@@ -23,6 +23,17 @@ export type {
   InferBody,
   InferResponse
 } from './types'
+
+// Export route builder
+export { route } from './route-builder'
+
+// Export route utilities (for adapters)
+export {
+  getBuildFunction,
+  getParseFunction,
+  getIsMatchFunction,
+  getServerPattern
+} from './route-builder'
 
 // Export handler factory
 export { handler } from './handler'

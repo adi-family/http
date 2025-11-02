@@ -9,6 +9,7 @@ import * as http from 'http'
 import * as https from 'https'
 import type { IncomingMessage, ServerResponse } from 'http'
 import type { Handler } from '@adi-family/http'
+import { getServerPattern, getIsMatchFunction, getParseFunction } from '@adi-family/http'
 
 /**
  * Options for creating a native HTTP server
@@ -148,19 +149,25 @@ function createRequestHandler(handlers: Handler<any, any, any, any>[]) {
     const { config } = handler
     const method = (config.method || 'GET').toUpperCase()
 
-    let pattern: RoutePattern
+    // Get server pattern and matching function from route config
+    const serverPattern = getServerPattern(config.route)
+    const isMatchFn = getIsMatchFunction(config.route)
+    const parseFn = getParseFunction(config.route)
+
+    let pattern: RoutePattern | null = null
     let staticPath: string | null = null
 
-    if (config.params) {
-      pattern = patternToRegex(config.params.pattern)
-    } else if (config.url) {
-      staticPath = config.url
-      pattern = { regex: new RegExp(`^${config.url}$`), paramNames: [] }
-    } else {
-      throw new Error('No route found in handler config')
+    if (config.route.type === 'static') {
+      staticPath = config.route.path
+      pattern = { regex: new RegExp(`^${config.route.path}$`), paramNames: [] }
+    } else if (config.route.type === 'pattern' && serverPattern) {
+      pattern = patternToRegex(serverPattern)
+    } else if (config.route.type === 'custom') {
+      // Custom routes use the is() function for matching
+      pattern = null
     }
 
-    return { handler, method, pattern, staticPath }
+    return { handler, method, pattern, staticPath, isMatchFn, parseFn }
   })
 
   return async (req: IncomingMessage, res: ServerResponse) => {
@@ -171,16 +178,29 @@ function createRequestHandler(handlers: Handler<any, any, any, any>[]) {
 
       // Find matching route
       let matchedRoute = null
-      let params: Record<string, string> = {}
+      let params: any = {}
+
+      const fullUrl = new URL(url, `http://${req.headers.host || 'localhost'}`)
 
       for (const route of routes) {
         if (route.method !== method) continue
 
-        const matchedParams = matchRoute(pathname, route.pattern)
-        if (matchedParams !== null) {
-          matchedRoute = route
-          params = matchedParams
-          break
+        // Try pattern matching first (if pattern exists)
+        if (route.pattern) {
+          const matchedParams = matchRoute(pathname, route.pattern)
+          if (matchedParams !== null) {
+            matchedRoute = route
+            params = matchedParams
+            break
+          }
+        } else if (route.isMatchFn) {
+          // Use custom is() function for matching
+          if (route.isMatchFn(fullUrl)) {
+            matchedRoute = route
+            // Parse params using custom parse function
+            params = route.parseFn(fullUrl)
+            break
+          }
         }
       }
 

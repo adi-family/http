@@ -43,12 +43,8 @@ export function handler<
   fn: HandlerFunction<TParams, TQuery, TBody, TResponse>
 ): Handler<TParams, TQuery, TBody, TResponse> {
   // Validate config
-  if (!config.url && !config.params) {
-    throw new Error('Either url or params.build must be provided')
-  }
-
-  if (config.url && config.params) {
-    throw new Error('Cannot provide both url and params')
+  if (!config.route) {
+    throw new Error('route is required in handler config')
   }
 
   return {

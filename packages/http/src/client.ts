@@ -4,6 +4,7 @@
  */
 
 import type { HandlerConfig, ClientConfig } from './types'
+import { getBuildFunction } from './route-builder'
 
 /**
  * Type-safe HTTP client that uses handler configs
@@ -36,19 +37,13 @@ export class BaseClient {
       params?: TParams
       query?: TQuery
       body?: TBody
-    }
+    } = {}
   ): Promise<TResponse> {
     const { params, query, body } = options
 
-    // Build URL path
-    let path: string
-    if (handlerConfig.params && params) {
-      path = handlerConfig.params.build(params)
-    } else if (handlerConfig.url) {
-      path = handlerConfig.url
-    } else {
-      throw new Error('No URL builder found')
-    }
+    // Build URL path using route builder
+    const buildFn = getBuildFunction(handlerConfig.route)
+    const path = buildFn(params as TParams)
 
     const url = new URL(path, this.config.baseUrl)
 

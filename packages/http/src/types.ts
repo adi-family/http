@@ -6,14 +6,26 @@
 import type { ZodSchema } from 'zod'
 
 /**
- * Configuration for URL parameters
- * Params are NOT validated - only used for URL building
+ * Route configuration types
  */
-export interface ParamsConfig<TParams = any> {
-  schema: ZodSchema<TParams>  // For type inference only
-  build: (params: TParams) => string
-  pattern: string  // Express route pattern like '/projects/:id'
-}
+export type RouteConfig<TParams = any> =
+  | {
+      type: 'static'
+      path: string
+    }
+  | {
+      type: 'pattern'
+      pattern: string
+      params: ZodSchema<TParams>
+      build?: (params: TParams) => string
+    }
+  | {
+      type: 'custom'
+      params: ZodSchema<TParams>
+      build: (params: TParams) => string
+      parse: (url: URL) => TParams
+      is: (url: URL) => boolean
+    }
 
 /**
  * Configuration for request body
@@ -50,8 +62,7 @@ export interface HandlerConfig<
   TResponse = any
 > {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
-  url?: string  // Static URL (no params)
-  params?: ParamsConfig<TParams>  // Dynamic URL with params
+  route: RouteConfig<TParams>
   query?: QueryConfig<TQuery>
   body?: BodyConfig<TBody>
   response?: ResponseConfig<TResponse>
@@ -97,7 +108,9 @@ export interface ClientConfig {
  * Type helpers for extracting types from configs
  */
 export type InferParams<T extends HandlerConfig> =
-  T['params'] extends { schema: ZodSchema<infer P> } ? P : never
+  T['route'] extends { params: ZodSchema<infer P> } ? P :
+  T['route'] extends { type: 'static' } ? never :
+  never
 
 export type InferQuery<T extends HandlerConfig> =
   T['query'] extends { schema: ZodSchema<infer Q> } ? Q : never
