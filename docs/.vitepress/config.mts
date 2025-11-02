@@ -37,7 +37,8 @@ export default defineConfig({
           items: [
             { text: 'What is @adi-family/http?', link: '/guide/what-is-it' },
             { text: 'Getting Started', link: '/guide/getting-started' },
-            { text: 'Why Use It?', link: '/guide/why' }
+            { text: 'Why Use It?', link: '/guide/why' },
+            { text: 'LLM Quick Reference', link: '/guide/llm' }
           ]
         },
         {
