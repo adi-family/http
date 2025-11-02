@@ -1,4 +1,4 @@
-# @adi-utils/http - Framework-Agnostic HTTP Interface
+# @adi-family/http - Framework-Agnostic HTTP Interface
 
 framework-agnostic, type-safe, validation, contracts, DRY
 
@@ -33,11 +33,14 @@ A framework-agnostic, type-safe HTTP interface system that separates API contrac
 
 ```bash
 # Core library
-bun add @adi-utils/http
+npm install @adi-family/http zod
+# or
+bun add @adi-family/http zod
 
 # Framework adapters
-bun add @adi-utils/http-express  # For Express
-# bun add @adi-utils/http-hono    # For Hono (future)
+npm install @adi-family/http-express  # For Express
+npm install @adi-family/http-native   # For Native Node.js HTTP
+# bun add @adi-family/http-hono       # For Hono (future)
 
 # Create contracts package
 mkdir -p packages/api-contracts
@@ -242,12 +245,13 @@ export const getProjectTaskHandler = handler(getProjectTaskConfig, async (ctx) =
 })
 ```
 
-### Step 3: Serve with Express
+### Step 3: Serve with Express or Native HTTP
 
+**Option A: Express**
 ```typescript
 // packages/backend/index.ts
 import express from 'express'
-import { serveExpress } from '@adi-utils/http-express'
+import { serveExpress } from '@adi-family/http-express'
 import * as projectHandlers from './handlers/projects'
 import * as taskHandlers from './handlers/tasks'
 
@@ -265,6 +269,31 @@ serveExpress(app, [
 app.listen(3000, () => {
   console.log('Server running on http://localhost:3000')
 })
+```
+
+**Option B: Native Node.js HTTP**
+```typescript
+// packages/backend/index.ts
+import { serveNative } from '@adi-family/http-native'
+import * as projectHandlers from './handlers/projects'
+import * as taskHandlers from './handlers/tasks'
+
+const server = serveNative(
+  [
+    projectHandlers.listProjectsHandler,
+    projectHandlers.getProjectHandler,
+    projectHandlers.createProjectHandler,
+    projectHandlers.getProjectTaskHandler,
+    // ... more handlers
+  ],
+  {
+    port: 3000,
+    hostname: '0.0.0.0',
+    onListen: (port, hostname) => {
+      console.log(`Server running on http://${hostname}:${port}`)
+    }
+  }
+)
 ```
 
 ### Step 4: Use in Client
@@ -580,10 +609,29 @@ function serveExpress(
 ): void
 ```
 
+### Native HTTP Adapter
+
+```typescript
+function serveNative(
+  handlers: Handler<any, any, any, any>[],
+  options?: NativeServerOptions
+): http.Server | https.Server
+
+function createHandler(
+  handlers: Handler<any, any, any, any>[]
+): (req: IncomingMessage, res: ServerResponse) => Promise<void>
+```
+
+## Packages
+
+- [@adi-family/http](https://www.npmjs.com/package/@adi-family/http) - Core library
+- [@adi-family/http-express](https://www.npmjs.com/package/@adi-family/http-express) - Express adapter
+- [@adi-family/http-native](https://www.npmjs.com/package/@adi-family/http-native) - Native Node.js HTTP adapter
+
 ## Contributing
 
-Issues and PRs welcome at https://github.com/your-org/adi-family
+Issues and PRs welcome at https://github.com/adi-family/http
 
 ## License
 
-MIT
+MIT - Copyright (c) 2025 ADI Family (https://github.com/adi-family)
