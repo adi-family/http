@@ -13,7 +13,12 @@
     "build:http-native": "cd packages/http-native && bun run build",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf packages/*/dist",
-    "dev:example": "bun run examples/server/app.ts"
+    "dev:example": "bun run examples/server/app.ts",
+    "prepublish": "./scripts/pre-publish.sh",
+    "publish:all": "./scripts/publish.sh",
+    "publish:dry-run": "./scripts/publish.sh --dry-run",
+    "version:bump": "./scripts/version-bump.sh",
+    "check:packages": "./scripts/check-packages.sh"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
