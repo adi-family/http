@@ -176,22 +176,22 @@ pnpm add @adi-family/http-native   # For Native Node.js
 ## What's Next?
 
 <div class="vp-link-grid">
-  <a href="/guide/getting-started" class="vp-link-grid-item">
+  <a href="/http/guide/getting-started" class="vp-link-grid-item">
     <h3>📚 Get Started</h3>
     <p>Learn the basics and create your first type-safe API</p>
   </a>
 
-  <a href="/guide/route-builder" class="vp-link-grid-item">
+  <a href="/http/guide/route-builder" class="vp-link-grid-item">
     <h3>🎨 Route Builder</h3>
     <p>Master the powerful route builder API</p>
   </a>
 
-  <a href="/examples/basic" class="vp-link-grid-item">
+  <a href="/http/examples/basic" class="vp-link-grid-item">
     <h3>💡 Examples</h3>
     <p>Explore practical examples and patterns</p>
   </a>
 
-  <a href="/guide/llm" class="vp-link-grid-item">
+  <a href="/http/guide/llm" class="vp-link-grid-item">
     <h3>🤖 LLM Reference</h3>
     <p>Quick reference guide for AI assistants</p>
   </a>
