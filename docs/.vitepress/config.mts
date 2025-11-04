@@ -62,7 +62,8 @@ export default defineConfig({
             { text: 'Custom Routes', link: '/guide/custom-routes' },
             { text: 'Middleware', link: '/guide/middleware' },
             { text: 'Error Handling', link: '/guide/error-handling' },
-            { text: 'Testing', link: '/guide/testing' }
+            { text: 'Testing', link: '/guide/testing' },
+            { text: 'Mock Generation', link: '/guide/mocks' }
           ]
         }
       ],

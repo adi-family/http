@@ -1,0 +1,55 @@
+{
+  "name": "@adi-family/http-mocks",
+  "version": "1.0.0",
+  "description": "Mock generation utilities for @adi-family/http",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "bun run build"
+  },
+  "keywords": [
+    "http",
+    "mocks",
+    "testing",
+    "type-safe",
+    "zod",
+    "typescript"
+  ],
+  "author": "ADI Family",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adi-family/http.git",
+    "directory": "packages/http-mocks"
+  },
+  "bugs": {
+    "url": "https://github.com/adi-family/http/issues"
+  },
+  "homepage": "https://github.com/adi-family/http#readme",
+  "dependencies": {
+    "@adi-family/http": "workspace:*"
+  },
+  "peerDependencies": {
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "zod": "^3.22.4"
+  }
+}

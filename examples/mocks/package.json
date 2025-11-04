@@ -1,0 +1,14 @@
+{
+  "name": "http-mocks-example",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun run index.ts"
+  },
+  "dependencies": {
+    "@adi-family/http": "workspace:*",
+    "@adi-family/http-mocks": "workspace:*",
+    "zod": "^3.22.4"
+  }
+}
