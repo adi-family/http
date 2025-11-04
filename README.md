@@ -727,6 +727,7 @@ function createHandler(
 - [@adi-family/http](https://www.npmjs.com/package/@adi-family/http) - Core library
 - [@adi-family/http-express](https://www.npmjs.com/package/@adi-family/http-express) - Express adapter
 - [@adi-family/http-native](https://www.npmjs.com/package/@adi-family/http-native) - Native Node.js HTTP adapter
+- [@adi-family/http-mocks](https://www.npmjs.com/package/@adi-family/http-mocks) - Mock generation utilities for testing
 
 ## Contributing
 

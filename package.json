@@ -7,10 +7,11 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "bun run build:http && bun run build:http-express && bun run build:http-native",
+    "build": "bun run build:http && bun run build:http-express && bun run build:http-native && bun run build:http-mocks",
     "build:http": "cd packages/http && bun run build",
     "build:http-express": "cd packages/http-express && bun run build",
     "build:http-native": "cd packages/http-native && bun run build",
+    "build:http-mocks": "cd packages/http-mocks && bun run build",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf packages/*/dist",
     "dev:example": "bun run examples/server/app.ts",
