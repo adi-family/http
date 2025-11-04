@@ -20,6 +20,483 @@ Mocks are essential for:
 - **Edge Case Testing**: Easily simulate error conditions
 - **Deterministic Tests**: Reproducible results every time
 
+## Frontend Development & Debugging
+
+Mock generation is incredibly powerful for frontend developers. Here's how to use it to debug and develop your UI independently.
+
+### The Problem
+
+As a frontend developer, you often face these challenges:
+
+- Backend API not ready yet
+- Need to test edge cases (empty lists, error states, loading states)
+- Backend is slow or unstable during development
+- Want to work offline (on a plane, coffee shop with bad wifi)
+- Need consistent data for visual testing
+- Difficult to reproduce specific scenarios
+
+### The Solution
+
+Use `MockClient` during development and seamlessly switch to the real client for production:
+
+```typescript
+// src/api/client.ts
+import { BaseClient } from '@adi-family/http';
+import { MockClient } from '@adi-family/http-mocks';
+
+const isDevelopment = import.meta.env.DEV;
+const useMocks = isDevelopment && localStorage.getItem('useMocks') === 'true';
+
+export const apiClient = useMocks
+  ? new MockClient({
+      delay: 500, // Simulate network latency
+      mockOptions: { seed: 42 } // Consistent data
+    })
+  : new BaseClient({
+      baseUrl: import.meta.env.VITE_API_URL
+    });
+
+// Toggle mocks from browser console:
+// localStorage.setItem('useMocks', 'true')
+// Then refresh the page
+```
+
+### Quick Start for Frontend Developers
+
+1. **Install the package**:
+
+```bash
+npm install @adi-family/http-mocks
+```
+
+2. **Create a development client**:
+
+```typescript
+// src/api/dev-client.ts
+import { MockClient } from '@adi-family/http-mocks';
+import { getUserConfig, getProjectsConfig, createProjectConfig } from './configs';
+
+export const devClient = new MockClient({ delay: 300 });
+
+// Register realistic mock data
+devClient.register(getUserConfig, {
+  id: 'dev-user-1',
+  name: 'Dev User',
+  email: 'dev@example.com',
+  avatar: 'https://i.pravatar.cc/150?u=dev'
+});
+
+devClient.register(getProjectsConfig, {
+  projects: [
+    {
+      id: '1',
+      name: 'Project Alpha',
+      status: 'active',
+      progress: 75
+    },
+    {
+      id: '2',
+      name: 'Project Beta',
+      status: 'pending',
+      progress: 20
+    }
+  ]
+});
+
+// Dynamic responses based on request
+devClient.register(createProjectConfig, ({ body }) => ({
+  id: `project-${Date.now()}`,
+  name: body.name,
+  status: 'pending',
+  progress: 0,
+  createdAt: new Date().toISOString()
+}));
+```
+
+3. **Use it in your app**:
+
+```typescript
+// src/hooks/useProjects.ts
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { apiClient } from '../api/client';
+import { getProjectsConfig, createProjectConfig } from '../api/configs';
+
+export function useProjects() {
+  return useQuery({
+    queryKey: ['projects'],
+    queryFn: () => apiClient.run(getProjectsConfig)
+  });
+}
+
+export function useCreateProject() {
+  return useMutation({
+    mutationFn: (data: { name: string }) =>
+      apiClient.run(createProjectConfig, { body: data })
+  });
+}
+```
+
+### Debugging Specific Scenarios
+
+#### Empty States
+
+```typescript
+// Test how your UI looks with no data
+devClient.register(getProjectsConfig, { projects: [] });
+```
+
+#### Loading States
+
+```typescript
+// Simulate slow network
+const slowClient = new MockClient({ delay: 3000 });
+```
+
+#### Error States
+
+```typescript
+// Simulate errors
+devClient.register(getUserConfig, () => {
+  throw new Error('Failed to fetch user');
+});
+```
+
+#### Edge Cases
+
+```typescript
+// Long text
+devClient.register(getProjectConfig, {
+  id: '1',
+  name: 'A'.repeat(100), // Very long name
+  description: 'B'.repeat(1000) // Very long description
+});
+
+// Special characters
+devClient.register(getProjectConfig, {
+  id: '1',
+  name: '🚀 Project <script>alert("xss")</script>',
+  description: 'Test & "special" \'characters\''
+});
+
+// Large datasets
+devClient.register(getProjectsConfig, {
+  projects: Array.from({ length: 1000 }, (_, i) => ({
+    id: `${i}`,
+    name: `Project ${i}`,
+    status: i % 3 === 0 ? 'active' : 'pending',
+    progress: Math.floor(Math.random() * 100)
+  }))
+});
+```
+
+### Development Mode Toggle
+
+Create a dev tools panel to easily switch between mock and real data:
+
+```typescript
+// src/components/DevTools.tsx
+import { useState, useEffect } from 'react';
+
+export function DevTools() {
+  const [useMocks, setUseMocks] = useState(
+    localStorage.getItem('useMocks') === 'true'
+  );
+
+  const toggle = () => {
+    const newValue = !useMocks;
+    localStorage.setItem('useMocks', String(newValue));
+    setUseMocks(newValue);
+    window.location.reload(); // Reload to apply changes
+  };
+
+  if (import.meta.env.PROD) return null;
+
+  return (
+    <div style={{
+      position: 'fixed',
+      bottom: 16,
+      right: 16,
+      padding: 12,
+      background: 'rgba(0,0,0,0.8)',
+      color: 'white',
+      borderRadius: 8,
+      fontSize: 12,
+      zIndex: 9999
+    }}>
+      <label>
+        <input
+          type="checkbox"
+          checked={useMocks}
+          onChange={toggle}
+        />
+        {' '}Use Mock Data
+      </label>
+    </div>
+  );
+}
+```
+
+### Framework-Specific Examples
+
+#### React with TanStack Query
+
+```typescript
+// src/api/client.ts
+import { MockClient } from '@adi-family/http-mocks';
+import { BaseClient } from '@adi-family/http';
+
+const isDev = import.meta.env.DEV;
+const useMocks = isDev && localStorage.getItem('useMocks') !== 'false'; // Default to mocks in dev
+
+const mockClient = new MockClient({
+  delay: 500,
+  mockOptions: { seed: 42 }
+});
+
+const realClient = new BaseClient({
+  baseUrl: import.meta.env.VITE_API_URL
+});
+
+export const client = useMocks ? mockClient : realClient;
+
+// src/hooks/useUser.ts
+import { useQuery } from '@tanstack/react-query';
+import { client } from '../api/client';
+import { getUserConfig } from '../api/configs';
+
+export function useUser(id: string) {
+  return useQuery({
+    queryKey: ['user', id],
+    queryFn: () => client.run(getUserConfig, { params: { id } })
+  });
+}
+```
+
+#### Vue with VueQuery
+
+```typescript
+// src/api/client.ts
+import { MockClient } from '@adi-family/http-mocks';
+import { BaseClient } from '@adi-family/http';
+
+const isDev = import.meta.env.DEV;
+const useMocks = isDev && localStorage.getItem('useMocks') !== 'false';
+
+export const client = useMocks
+  ? new MockClient({ delay: 500 })
+  : new BaseClient({ baseUrl: import.meta.env.VITE_API_URL });
+
+// src/composables/useUser.ts
+import { useQuery } from '@tanstack/vue-query';
+import { client } from '../api/client';
+import { getUserConfig } from '../api/configs';
+
+export function useUser(id: Ref<string>) {
+  return useQuery({
+    queryKey: ['user', id],
+    queryFn: () => client.run(getUserConfig, { params: { id.value } })
+  });
+}
+```
+
+#### Svelte with TanStack Query
+
+```typescript
+// src/lib/api/client.ts
+import { MockClient } from '@adi-family/http-mocks';
+import { BaseClient } from '@adi-family/http';
+import { browser } from '$app/environment';
+import { dev } from '$app/environment';
+
+const useMocks = browser && dev &&
+  localStorage.getItem('useMocks') !== 'false';
+
+export const client = useMocks
+  ? new MockClient({ delay: 500 })
+  : new BaseClient({ baseUrl: import.meta.env.VITE_API_URL });
+```
+
+### Pro Tips for Frontend Debugging
+
+#### 1. Create a Mock Data Factory
+
+```typescript
+// src/api/mocks/factories.ts
+import { MockClient } from '@adi-family/http-mocks';
+
+export function createUserMock(overrides = {}) {
+  return {
+    id: 'user-1',
+    name: 'John Doe',
+    email: 'john@example.com',
+    avatar: 'https://i.pravatar.cc/150?u=john',
+    role: 'user',
+    ...overrides
+  };
+}
+
+export function createProjectMock(overrides = {}) {
+  return {
+    id: 'project-1',
+    name: 'Sample Project',
+    status: 'active' as const,
+    progress: 50,
+    createdAt: new Date().toISOString(),
+    ...overrides
+  };
+}
+
+// Use in your dev client
+devClient.register(getUserConfig, createUserMock());
+devClient.register(getUserConfig, createUserMock({ role: 'admin' })); // Admin variant
+```
+
+#### 2. Test Different User Roles
+
+```typescript
+// Switch between different user types
+const mockClient = new MockClient();
+
+// Regular user
+mockClient.register(getCurrentUserConfig, {
+  id: '1',
+  role: 'user',
+  permissions: ['read']
+});
+
+// Admin user (set in localStorage and reload)
+if (localStorage.getItem('userRole') === 'admin') {
+  mockClient.register(getCurrentUserConfig, {
+    id: '1',
+    role: 'admin',
+    permissions: ['read', 'write', 'delete', 'admin']
+  });
+}
+```
+
+#### 3. Simulate Realistic Pagination
+
+```typescript
+devClient.register(getProjectsConfig, ({ query }) => {
+  const page = query?.page ?? 1;
+  const limit = query?.limit ?? 20;
+  const total = 100;
+
+  return {
+    projects: Array.from({ length: limit }, (_, i) => ({
+      id: `${(page - 1) * limit + i}`,
+      name: `Project ${(page - 1) * limit + i + 1}`,
+      status: 'active'
+    })),
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit)
+    }
+  };
+});
+```
+
+#### 4. Debug Race Conditions
+
+```typescript
+// Vary response times to catch race conditions
+const unpredictableClient = new MockClient();
+
+unpredictableClient.register(getUserConfig, async ({ params }) => {
+  // Random delay between 100-2000ms
+  await new Promise(resolve =>
+    setTimeout(resolve, 100 + Math.random() * 1900)
+  );
+
+  return {
+    id: params.id,
+    name: `User ${params.id}`
+  };
+});
+```
+
+#### 5. Visual Regression Testing
+
+```typescript
+// Use deterministic mocks for consistent screenshots
+const visualTestClient = new MockClient({
+  mockOptions: {
+    seed: 12345, // Same seed = same data every time
+    stringLength: 10,
+    arrayLength: 5
+  }
+});
+
+// Perfect for visual regression tests with tools like Percy, Chromatic, etc.
+```
+
+### Integration with Storybook
+
+```typescript
+// .storybook/preview.ts
+import { MockClient } from '@adi-family/http-mocks';
+import type { Preview } from '@storybook/react';
+
+const mockClient = new MockClient({
+  mockOptions: { seed: 42 }
+});
+
+// Make available globally
+(window as any).__mockClient = mockClient;
+
+// In your stories
+import { getUserConfig } from '../api/configs';
+
+export default {
+  title: 'Components/UserProfile',
+  component: UserProfile
+};
+
+export const Default = {
+  beforeEach: () => {
+    const mockClient = (window as any).__mockClient;
+    mockClient.clear();
+    mockClient.register(getUserConfig, {
+      id: '1',
+      name: 'Story User',
+      email: 'story@example.com'
+    });
+  }
+};
+
+export const LongName = {
+  beforeEach: () => {
+    const mockClient = (window as any).__mockClient;
+    mockClient.clear();
+    mockClient.register(getUserConfig, {
+      id: '1',
+      name: 'A'.repeat(50),
+      email: 'story@example.com'
+    });
+  }
+};
+```
+
+### Debugging Checklist
+
+When debugging frontend issues with mocks:
+
+- [ ] Test with empty data (`[]`, `null`, `undefined`)
+- [ ] Test with minimal data (1 item)
+- [ ] Test with maximum data (1000+ items)
+- [ ] Test with very long strings (overflow text)
+- [ ] Test with special characters (`<>`, `"'`, emoji)
+- [ ] Test with slow network (high delay)
+- [ ] Test with fast network (no delay)
+- [ ] Test error states (throw errors)
+- [ ] Test loading states (high delay + skeleton)
+- [ ] Test different user roles/permissions
+- [ ] Test pagination edge cases (first page, last page, empty page)
+- [ ] Test sorting and filtering
+- [ ] Test race conditions (random delays)
+
 ## Mock Client
 
 The `MockClient` is a drop-in replacement for `BaseClient` that returns mock data instead of making HTTP requests.
