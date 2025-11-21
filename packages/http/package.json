@@ -10,6 +10,11 @@
       "import": "./dist/index.js",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./mock": {
+      "import": "./dist/mock/index.js",
+      "require": "./dist/mock/index.js",
+      "types": "./dist/mock/index.d.ts"
     }
   },
   "files": [
@@ -19,6 +24,7 @@
   ],
   "scripts": {
     "build": "tsc",
+    "test": "bun test",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "bun run build"
   },
@@ -29,7 +35,10 @@
     "validation",
     "contracts",
     "zod",
-    "typescript"
+    "typescript",
+    "mock",
+    "testing",
+    "test-utilities"
   ],
   "author": "ADI Family",
   "license": "MIT",
